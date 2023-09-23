@@ -229,22 +229,25 @@ jobs:
     needs: load-env
     if: needs.load-env.outputs.run_build_macos == 'true'
     env:
-      platform: macos_intel
+      universal: macos_universal
+      apple: macos_apple_silicon
+      intel: macos_intel
     steps:
       - uses: actions/checkout@v4
-
-      - uses: dtolnay/rust-toolchain@stable
+      
+      - name: Install toolchains
+        uses: dtolnay/rust-toolchain@stable
         with:
-          targets: x86_64-apple-darwin
-
+          targets: x86_64-apple-darwin, aarch64-apple-darwin
+          
       - name: Environment Setup
         run: |
-          export CFLAGS="-fno-stack-check"
-          export MACOSX_DEPLOYMENT_TARGET="10.9"
+          export MACOSX_DEPLOYMENT_TARGET="11.0"
 
-      - name: Build
+      - name: Builds
         run: |
           cargo build --release --target x86_64-apple-darwin
+          cargo build --release --target aarch64-apple-darwin
 
       - name: Set file name
         id: set_file_name
@@ -457,7 +460,7 @@ jobs:
               continue
             fi
            for file in builds/$channel/*; do
-              i f [ "${file##*.}" = "txt" ]; then
+              if [ "${file##*.}" = "txt" ]; then
                 continue  # Skip .txt files
               fi
               ./butler push \
