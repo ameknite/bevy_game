@@ -405,6 +405,9 @@ jobs:
           BUTLER_API_KEY: ${{ secrets.BUTLER_CREDENTIALS }}
         run: |
           for channel in $(ls builds); do
+            if [ "$channel" = "github-pages" ]; then
+                continue
+            fi
             ./butler push \
                 --fix-permissions \
                 --userversion="${{ needs.load-env.outputs.tag }}" \
