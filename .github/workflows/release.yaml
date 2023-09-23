@@ -320,8 +320,6 @@ jobs:
             os: ubuntu-latest
           - artifact_name: windows
             os: windows-latest
-          - artifact_name: macos_universal
-            os: macos-latest
           - artifact_name: macos_apple_silicon
             os: macos-latest
           - artifact_name: macos_intel
@@ -333,15 +331,6 @@ jobs:
         id: check_artifact
         with:
           name: ${{ matrix.artifact_name }}
-
-      - name: Check for .dmg or .zip
-        uses: haya14busa/action-cond@v1
-        if: steps.check_artifact.outputs.exists == 'true'
-        id: condval
-        with:
-          cond: ${{ matrix.os == 'macos-latest' }}
-          if_true: "dmg"
-          if_false: "zip"
 
       - name: Download artifacts
         if: steps.check_artifact.outputs.exists == 'true'
@@ -364,7 +353,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./artifact/${{ steps.get_file_name.outputs.file_name }}.${{ steps.condval.outputs.value }}
+          file: ./artifact/${{ steps.get_file_name.outputs.file_name }}
           tag: ${{ needs.load-env.outputs.tag }}
           overwrite: true
 
