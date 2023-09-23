@@ -404,7 +404,9 @@ jobs:
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_CREDENTIALS }}
         run: |
+          echo $(ls builds)
           for channel in $(ls builds); do
+            echo $channel
             if [ "$channel" = "github-pages" ]; then
                 continue
             fi
