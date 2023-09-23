@@ -125,9 +125,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.platform }}
-          path: |
-            ${{ steps.set_file_name.outputs.file_name  }}.zip
-            file_name.txt
+          path: ${{ steps.set_file_name.outputs.file_name  }}.zip
           retention-days: 1
 
   # Build for Linux x86_64
@@ -172,9 +170,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.platform }}
-          path: |
-            ${{ steps.set_file_name.outputs.file_name  }}.zip
-            file_name.txt
+          path: ${{ steps.set_file_name.outputs.file_name  }}.zip
           retention-days: 1
 
   # Build for Windows x86_64
@@ -216,59 +212,67 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.platform }}
-          path: |
-            ${{ steps.set_file_name.outputs.file_name  }}.zip
-            file_name.txt
+          path: ${{ steps.set_file_name.outputs.file_name  }}.zip
           retention-days: 1
 
-  # Build for MacOS Universal
   build-macos-universal:
     runs-on: macos-latest
-    needs: load-env
+    needs:
+      - load-env
+      - build-macos-intel 
+      - build-macos-apple-silicon
     if: needs.load-env.outputs.run_build_macos_universal == 'true'
     env:
       platform: macos_universal
+      intel: macos_intel
+      apple: macos_apple_silicon
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install toolchains
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-apple-darwin, aarch64-apple-darwin
-          
       - name: Environment Setup
         run: |
           export MACOSX_DEPLOYMENT_TARGET="11.0"
-
-      - name: Builds
-        run: |
-          cargo build --release --target x86_64-apple-darwin
-          cargo build --release --target aarch64-apple-darwin
-          
-      - name: Create Universal Binary
-        run: |
-          lipo -create -output target/release/${{ env.binary }} target/aarch64-apple-darwin/release/${{ env.binary }} target/x86_64-apple-darwin/release/${{ env.binary }}
       
-      - name: Set file name
-        id: set_file_name
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.apple }}
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ env.intel }}
+
+      - name: Set file names
+        id: set_file_names
         run: |
+          echo "file_appple=${{ env.binary }}_${{ needs.load-env.outputs.tag }}_${{ env.apple }}" >> "$GITHUB_OUTPUT"
+          echo "file_intel=${{ env.binary }}_${{ needs.load-env.outputs.tag }}_${{ env.intel }}" >> "$GITHUB_OUTPUT"
           echo "file_name=${{ env.binary }}_${{ needs.load-env.outputs.tag }}_${{ env.platform }}" >> "$GITHUB_OUTPUT"
 
+      - name: unzip files
+        run: |
+          mkdir ${{ env.intel }}
+          mkdir ${{ env.apple }}
+          unzip ${{ steps.set_file_names.outputs.file_appple }} -d ${{ env.apple }}
+          unzip ${{ steps.set_file_names.outputs.file_intel }} -d ${{ env.intel }}
+
+      - name: Create Universal Binary
+        run: |
+          mkdir output
+          lipo -create -output output/${{ env.binary }} ${{ env.apple }} ${{ env.intel }}
+      
       - name: Prepare Package
         run: |
           mkdir -p ${{ env.binary }}.app/Contents/MacOS
-          cp target/release/${{ env.binary }} ${{ env.binary }}.app/Contents/MacOS/
+          cp output/${{ env.binary }} ${{ env.binary }}.app/Contents/MacOS/
           cp -r assets ${{ env.binary }}.app/Contents/MacOS/
-          hdiutil create -fs HFS+ -volname "${{ env.binary }}" -srcfolder ${{ env.binary }}.app ${{ steps.set_file_name.outputs.file_name  }}.dmg
+          hdiutil create -fs HFS+ -volname "${{ env.binary }}" -srcfolder ${{ env.binary }}.app ${{ steps.set_file_names.outputs.file_name  }}.dmg
         
       - name: Upload binaries to artifacts
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.platform }}
-          path: |
-            ${{ steps.set_file_name.outputs.file_name  }}.dmg
-            file_name.txt
-          retention-days: 1
+          path: ${{ steps.set_file_names.outputs.file_name  }}.dmg
+          retention-days: 1          
 
   # Build for MacOS x86_64
   build-macos-intel:
@@ -309,9 +313,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.platform }}
-          path: |
-            ${{ steps.set_file_name.outputs.file_name  }}.dmg
-            file_name.txt
+          path: ${{ steps.set_file_name.outputs.file_name  }}.dmg
           retention-days: 1
 
   # Build for MacOS Apple Silicon
@@ -353,9 +355,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.platform }}
-          path: |
-            ${{ steps.set_file_name.outputs.file_name  }}.dmg
-            file_name.txt
+          path: ${{ steps.set_file_name.outputs.file_name  }}.dmg
           retention-days: 1
 
   # Release binaries in github
@@ -414,6 +414,7 @@ jobs:
         id: get_file_name
         shell: bash
         run: |
+          ls -R
           echo "file_name=$(ls | head -n 1)" >> "$GITHUB_OUTPUT"
           
       - name: Upload artifact to release
