@@ -249,23 +249,26 @@ jobs:
           echo "file_intel=${{ env.binary }}_${{ needs.load-env.outputs.tag }}_${{ env.intel }}" >> "$GITHUB_OUTPUT"
           echo "file_name=${{ env.binary }}_${{ needs.load-env.outputs.tag }}_${{ env.platform }}" >> "$GITHUB_OUTPUT"
 
-      - name: unzip files
+      - name: Extract files from .dmg
         run: |
-          mkdir ${{ env.intel }}
-          mkdir ${{ env.apple }}
-          unzip ${{ steps.set_file_names.outputs.file_appple }} -d ${{ env.apple }}
-          unzip ${{ steps.set_file_names.outputs.file_intel }} -d ${{ env.intel }}
+          # Mount the .dmg files
+          hdiutil attach -mountpoint "apple_mounted" "${{ steps.set_file_names.outputs.file_appple }}.dmg"
+          hdiutil attach -mountpoint "intel_mounted" "${{ steps.set_file_names.outputs.file_intel }}.dmg"
+
+          # Copy the contents from the mounted volumes to the respective directories
+          cp -R "apple_mounted"/${{ env.binary }}.app/Contents/MacOS ${{ env.apple }}
+          cp -R "apple_mounted"/${{ env.binary }}.app/Contents/MacOS ${{ env.apple }}    
 
       - name: Create Universal Binary
         run: |
           mkdir output
-          lipo -create -output output/${{ env.binary }} ${{ env.apple }} ${{ env.intel }}
+          lipo -create -output output/${{ env.binary }} ${{ env.apple }}/${{ env.binary }} ${{ env.intel }}/${{ env.binary}}
       
       - name: Prepare Package
         run: |
           mkdir -p ${{ env.binary }}.app/Contents/MacOS
           cp output/${{ env.binary }} ${{ env.binary }}.app/Contents/MacOS/
-          cp -r assets ${{ env.binary }}.app/Contents/MacOS/
+          cp -r ${{ env.apple }}assets ${{ env.binary }}.app/Contents/MacOS/
           hdiutil create -fs HFS+ -volname "${{ env.binary }}" -srcfolder ${{ env.binary }}.app ${{ steps.set_file_names.outputs.file_name  }}.dmg
         
       - name: Upload binaries to artifacts
@@ -409,11 +412,13 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: ${{ matrix.artifact_name }}
+          path: ./artifact
 
-      - name: Get file name
+      - name: Get file 
         if: steps.check_artifact.outputs.exists == 'true'
         id: get_file_name
         shell: bash
+        working-directory: ./artifact
         run: |
           ls -R
           echo "file_name=$(ls | head -n 1)" >> "$GITHUB_OUTPUT"
@@ -463,7 +468,7 @@ jobs:
             ./butler push \
               --fix-permissions \
               --userversion="${{ needs.load-env.outputs.tag }}" \
-              "$file" \
+              builds/$channel/* \
               ${{ needs.load-env.outputs.itchio_target }}:$channel
           done
 
