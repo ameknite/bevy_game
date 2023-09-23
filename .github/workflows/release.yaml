@@ -11,6 +11,7 @@ env:
   # Valid platforms: "web, linux, windows, macos_universal,
   # macos_intel, macos_apple_silicon"
   # - Use "universal" or "macos" to abbreviate "macos_universal".
+  #  "macos_universal" builds "macos_apple_silicon" and "macos_intel" and bundle them in one package.
   # - Use "intel" and "apple" to abbreviate "macos_intel" and "macos_apple_silicon" respectivetly.
   # - Use "wasm" to do the same as "web"
   build_for: "web, linux, windows, macos"
@@ -278,7 +279,7 @@ jobs:
   build-macos-intel:
     runs-on: macos-latest
     needs: load-env
-    if: needs.load-env.outputs.run_build_macos_intel == 'true'
+    if: needs.load-env.outputs.run_build_macos_intel == 'true' || needs.load-env.outputs.run_build_macos_universal == 'true'
     env:
       platform: macos_intel
     steps:
@@ -320,7 +321,7 @@ jobs:
   build-macos-apple-silicon:
     runs-on: macos-latest
     needs: load-env
-    if: needs.load-env.outputs.run_build_macos_apple_silicon == 'true'
+    if: needs.load-env.outputs.run_build_macos_apple_silicon == 'true' || needs.load-env.outputs.run_build_macos_universal == 'true'
     env:
       platform: macos_apple_silicon
     steps:
