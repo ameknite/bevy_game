@@ -8,16 +8,17 @@ env:
 
   # Build platforms
 
-  # Valid platforms: "web, linux, windows, intel, apple_silicon"
-  # - "intel" and "apple_silicon" are for build to MacOS, 
-  # for breviety you can write "macos" to build for both.
-  # - you can also write "wasm" to build for web.
+  # Valid platforms: "web, linux, windows, macos_universal,
+  # macos_intel, macos_apple_silicon"
+  # - Use "universal" or "macos" to abbreviate "macos_universal".
+  # - Use "intel" and "apple" to abbreviate "macos_intel" and "macos_apple_silicon" respectivetly.
+  # - Use "wasm" to do the same as "web"
   build_for: "web, linux, windows, macos"
 
-  # Releases
+  # Publish platforms
 
   # Valid platforms: "github_releases, itchio, github_pages"
-  # - For brevity you can write: "releases, itchio, pages"
+  # - For brevity you can write: "releases, itchio, pages" respectivetly.
   publish_to: "github_releases"
 
   # Itch.io configuration
@@ -66,7 +67,7 @@ jobs:
       run_build_web: ${{ ( inputs.tag &&  (contains(inputs.build_for, 'web') || contains(inputs.build_for, 'wasm')) ) || ( !inputs.tag && (contains(env.build_for, 'web') || contains(env.build_for, 'wasm') ) ) }}
       run_build_linux: ${{ (inputs.tag && contains(inputs.build_for, 'linux') ) || ( !inputs.tag && contains(env.build_for, 'linux') ) }}
       run_build_windows: ${{ ( inputs.tag && contains(inputs.build_for, 'windows') ) || ( !inputs.tag && contains(env.build_for, 'windows') ) }}
-      run_build_macos: ${{ ( inputs.tag && contains(inputs.build_for, 'macos') ) || ( !inputs.tag && contains(env.build_for, 'macos') ) }}
+      run_build_macos_universal: ${{ ( inputs.tag && (contains(inputs.build_for, 'macos') || contains(inputs.build_for, 'universal')) ) || ( !inputs.tag && (contains(env.build_for, 'macos') || contains(env.build_for, 'universal')) ) }}
       run_build_macos_intel: ${{ ( inputs.tag && contains(inputs.build_for, 'intel') ) || ( !inputs.tag && contains(env.build_for, 'intel') ) }}
       run_build_macos_apple_silicon: ${{ ( inputs.tag && contains(inputs.build_for, 'apple') ) || ( !inputs.tag && contains(env.build_for, 'apple')) }}
       run_publish_github_releases: ${{ ( inputs.tag && contains(inputs.publish_to, 'releases') ) || ( !inputs.tag && contains(env.publish_to, 'releases') ) }}
@@ -107,8 +108,7 @@ jobs:
         run: |
           wasm-bindgen --no-typescript --out-name bevy_game --out-dir wasm --target web target/wasm32-unknown-unknown/release/${{ env.binary }}.wasm
           cp -r assets wasm/  
-          echo ${{ steps.set_file_name.outputs.file_name }} >> file_name.txt     
-      
+
       - name: Upload github-page to artifacts
         if: needs.load-env.outputs.run_publish_github_pages == 'true'
         uses: actions/upload-pages-artifact@v2
@@ -162,7 +162,6 @@ jobs:
           mkdir linux
           cp target/x86_64-unknown-linux-gnu/release/${{ env.binary }} linux/
           cp -r assets linux/
-          echo ${{ steps.set_file_name.outputs.file_name }} >> file_name.txt      
 
       - name: Package as a zip
         working-directory: ./linux
@@ -208,7 +207,6 @@ jobs:
           mkdir windows
           cp target/x86_64-pc-windows-msvc/release/${{ env.binary }}.exe windows/
           cp -r assets windows/
-          echo ${{ steps.set_file_name.outputs.file_name }} >> file_name.txt      
 
       - name: Package as a zip
         run: |
@@ -224,14 +222,12 @@ jobs:
           retention-days: 1
 
   # Build for MacOS Universal
-  build-macos:
+  build-macos-universal:
     runs-on: macos-latest
     needs: load-env
-    if: needs.load-env.outputs.run_build_macos == 'true'
+    if: needs.load-env.outputs.run_build_macos_universal == 'true'
     env:
-      universal: macos_universal
-      apple: macos_apple_silicon
-      intel: macos_intel
+      platform: macos_universal
     steps:
       - uses: actions/checkout@v4
       
@@ -248,7 +244,11 @@ jobs:
         run: |
           cargo build --release --target x86_64-apple-darwin
           cargo build --release --target aarch64-apple-darwin
-
+          
+      - name: Create Universal Binary
+        run: |
+          lipo -create -output target/release/${{ env.binary }} target/aarch64-apple-darwin/release/${{ env.binary }} target/x86_64-apple-darwin/release/${{ env.binary }}
+      
       - name: Set file name
         id: set_file_name
         run: |
@@ -257,11 +257,10 @@ jobs:
       - name: Prepare Package
         run: |
           mkdir -p ${{ env.binary }}.app/Contents/MacOS
-          cp target/x86_64-apple-darwin/release/${{ env.binary }} ${{ env.binary }}.app/Contents/MacOS/
+          cp target/release/${{ env.binary }} ${{ env.binary }}.app/Contents/MacOS/
           cp -r assets ${{ env.binary }}.app/Contents/MacOS/
           hdiutil create -fs HFS+ -volname "${{ env.binary }}" -srcfolder ${{ env.binary }}.app ${{ steps.set_file_name.outputs.file_name  }}.dmg
-          echo ${{ steps.set_file_name.outputs.file_name }} >> file_name.txt      
-
+        
       - name: Upload binaries to artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -305,7 +304,6 @@ jobs:
           cp target/x86_64-apple-darwin/release/${{ env.binary }} ${{ env.binary }}.app/Contents/MacOS/
           cp -r assets ${{ env.binary }}.app/Contents/MacOS/
           hdiutil create -fs HFS+ -volname "${{ env.binary }}" -srcfolder ${{ env.binary }}.app ${{ steps.set_file_name.outputs.file_name  }}.dmg
-          echo ${{ steps.set_file_name.outputs.file_name }} >> file_name.txt      
 
       - name: Upload binaries to artifacts
         uses: actions/upload-artifact@v3
@@ -350,7 +348,6 @@ jobs:
           cp target/aarch64-apple-darwin/release/${{ env.binary }} ${{ env.binary }}.app/Contents/MacOS/
           cp -r assets ${{ env.binary }}.app/Contents/MacOS/
           hdiutil create -fs HFS+ -volname "${{ env.binary }}" -srcfolder ${{ env.binary }}.app ${{ steps.set_file_name.outputs.file_name  }}.dmg
-          echo ${{ steps.set_file_name.outputs.file_name }} >> file_name.txt      
 
       - name: Upload binaries to artifacts
         uses: actions/upload-artifact@v3
@@ -369,6 +366,7 @@ jobs:
       - build-web
       - build-linux
       - build-windows
+      - build-macos-universal
       - build-macos-apple-silicon
       - build-macos-intel
     if: ${{ always() && !failure() && !cancelled() && needs.load-env.outputs.run_publish_github_releases == 'true'}}
@@ -382,6 +380,8 @@ jobs:
             os: ubuntu-latest
           - artifact_name: windows
             os: windows-latest
+          - artifact_name: macos_universal
+            os: macos-latest
           - artifact_name: macos_apple_silicon
             os: macos-latest
           - artifact_name: macos_intel
@@ -414,7 +414,7 @@ jobs:
         id: get_file_name
         shell: bash
         run: |
-          echo "file_name=$(cat file_name.txt)" >> "$GITHUB_OUTPUT"
+          echo "file_name=$(ls | head -n 1)" >> "$GITHUB_OUTPUT"
           
       - name: Upload artifact to release
         if: steps.check_artifact.outputs.exists == 'true'
@@ -433,6 +433,7 @@ jobs:
       - build-web
       - build-linux
       - build-windows
+      - build-macos-universal
       - build-macos-apple-silicon
       - build-macos-intel
     if: ${{ always() && !failure() && !cancelled() && needs.load-env.outputs.run_publish_itchio == 'true' && needs.load-env.outputs.itchio_target != '' }}
@@ -453,22 +454,15 @@ jobs:
         env:
           BUTLER_API_KEY: ${{ secrets.BUTLER_CREDENTIALS }}
         run: |
-          echo $(ls builds)
           for channel in $(ls builds); do
-            echo $channel
             if [ "$channel" = "github-pages" ]; then
               continue
             fi
-           for file in builds/$channel/*; do
-              if [ "${file##*.}" = "txt" ]; then
-                continue  # Skip .txt files
-              fi
-              ./butler push \
-                --fix-permissions \
-                --userversion="${{ needs.load-env.outputs.tag }}" \
-                "$file" \
-                ${{ needs.load-env.outputs.itchio_target }}:$channel
-            done
+            ./butler push \
+              --fix-permissions \
+              --userversion="${{ needs.load-env.outputs.tag }}" \
+              "$file" \
+              ${{ needs.load-env.outputs.itchio_target }}:$channel
           done
 
   # Publish to github page
@@ -482,9 +476,6 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Setup Pages
         uses: actions/configure-pages@v3
 
