@@ -8,10 +8,10 @@ env:
 
   # Build platforms
 
-  # Valid platforms: "web, linux, windows, intel, apple_silicon"
-  # - "intel" and "apple_silicon" are for build to MacOS, 
-  # for breviety you can write "macos" to build for both.
-  # - you can also write "wasm" to build for web.
+  # Valid platforms: "web, linux, windows, macos_intel, macos_apple_silicon"
+  # - Write "intel" and "apple" to abbreviate "macos_intel" and "macos_apple_silicon respectivetly"
+  # - Write "macos" to build for both "intel" and "apple"
+  # - Write "web" or "wasm" to build for the web
   build_for: "web, linux, windows, macos"
 
   # Releases
