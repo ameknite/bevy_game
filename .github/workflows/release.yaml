@@ -47,7 +47,7 @@ on:
         default: web,linux,windows,macos
       publish_to:
         description: "Publish to:"
-        default: releases,itchio,pages
+        default: github_releases
       itchio_target:
         description: "Itchio target: <user>/<your-game>"
         type: string
@@ -422,7 +422,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
+
       - name: Setup Pages
         uses: actions/configure-pages@v3
 
