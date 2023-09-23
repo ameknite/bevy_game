@@ -288,7 +288,7 @@ jobs:
       - name: Prepare Package
         run: |
           mkdir -p ${{ steps.set_paths.outputs.app_structure }}
-          cp target/x86_64-apple-darwin/release/${{ env.binary }} ${{ steps.set_paths.outputs.app_structure }}
+          cp target/aarch64-apple-darwin/release/${{ env.binary }} ${{ steps.set_paths.outputs.app_structure }}
           cp -r assets ${{ steps.set_paths.outputs.app_structure }}
           hdiutil create -fs HFS+ -volname "${{ env.binary }}" -srcfolder ${{ env.binary }}.app ${{ steps.set_paths.outputs.file_name  }}.dmg
 
@@ -364,7 +364,7 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ steps.get_file_name.outputs.file_name }}.${{ steps.condval.outputs.value }}
+          file: ./artifact/${{ steps.get_file_name.outputs.file_name }}.${{ steps.condval.outputs.value }}
           tag: ${{ needs.load-env.outputs.tag }}
           overwrite: true
 
