@@ -134,7 +134,7 @@ If you want to publish your game to be playable in the browser on a [GitHub page
 
 1. In the release.yaml file, verify that you are writing `github_pages` to the env variable [`publish_to`](./.github/workflows/release.yaml#L21) and `web` in the env variable [`build_for`](./.github/workflows/release.yaml#L15).
 2. Trigger the [release.yaml](./.github/workflows/release.yaml) workflow by pushing a tag.
-3. In your GitHub repository, go to the `Settings` tab, then click on `Pages` in the sidebar. Navigate to the `Build and Deployment` section, select the `gh-pages` branch and set the `root` folder. Finally, click on `Save`. ![Github Pages](https://github-production-user-asset-6210df.s3.amazonaws.com/104745335/268780368-af547adf-d8e8-4bdf-90e5-b7ee717493dc.png)
+3. In your GitHub repository, go to the `Settings` tab, then click on `Pages` in the sidebar. Navigate to the `Build and Deployment` section and select the `Github Actions` as the `Source`. ![Github Pages](https://github-production-user-asset-6210df.s3.amazonaws.com/104745335/268780368-af547adf-d8e8-4bdf-90e5-b7ee717493dc.png)
 4. Wait a few minutes and your page will be available at a URL following this structure: `https://<Your GitHub username>.github.io/<Name of your repository>/`
 
 If you want to publish by manually triggering a workflow in GitHub, instead of doing the 1 and 2 steps, write all your configuration in the GitHub Workflow form and then run the workflow. Refer to the ['Manual Workflow Run in GitHub'](#manual-workflow-run-in-github).
