@@ -48,7 +48,8 @@ You can configure the [build](.github/workflows/release.yaml#L15) and [publish](
 
 You can configure and trigger the workflow directly in your GitHub repository. Navigate to the `Actions` section, click `Release` on the sidebar, then press the `Run workflow` button and select the configuration for the build and publish targets you want.
 
-![Run manual workflow](https://github-production-user-asset-6210df.s3.amazonaws.com/104745335/269753464-cc39382c-67de-43e9-90aa-6f66ca444732.png)
+![Run manual workflow](https://user-images.githubusercontent.com/104745335/270079051-b5fb52c8-ed89-4f91-965e-670f38f87ddb.png)
+
 
 The configuration in GitHub takes priority over the environment variables in the [release.yaml](.github/workflows/release.yaml#L4) file. A manual workflow run also enables you to override the tag version eliminating the need to create a tag to trigger the workflow.
 
@@ -134,7 +135,7 @@ If you want to publish your game to be playable in the browser on a [GitHub page
 
 1. In the release.yaml file, verify that you are writing `github_pages` to the env variable [`publish_to`](./.github/workflows/release.yaml#L21) and `web` in the env variable [`build_for`](./.github/workflows/release.yaml#L15).
 2. Trigger the [release.yaml](./.github/workflows/release.yaml) workflow by pushing a tag.
-3. In your GitHub repository, go to the `Settings` tab, then click on `Pages` in the sidebar. Navigate to the `Build and Deployment` section and select the `Github Actions` as the `Source`. ![Github Pages](https://github-production-user-asset-6210df.s3.amazonaws.com/104745335/268780368-af547adf-d8e8-4bdf-90e5-b7ee717493dc.png)
+3. In your GitHub repository, go to the `Settings` tab, then click on `Pages` in the sidebar. Navigate to the `Build and Deployment` section and select `Github Actions` as the `Source`. ![Github Pages](https://user-images.githubusercontent.com/104745335/270078892-a6da763e-5a4a-4f55-8d3c-41a14e8423e2.png)
 4. Wait a few minutes and your page will be available at a URL following this structure: `https://<Your GitHub username>.github.io/<Name of your repository>/`
 
 If you want to publish by manually triggering a workflow in GitHub, instead of doing the 1 and 2 steps, write all your configuration in the GitHub Workflow form and then run the workflow. Refer to the ['Manual Workflow Run in GitHub'](#manual-workflow-run-in-github).
