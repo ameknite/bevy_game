@@ -63,12 +63,13 @@ jobs:
         uses: olegtarasov/get-tag@v2.1.2
 
     outputs:
-      run_build_web: ${{ ( inputs.tag &&  (contains(inputs.build_for, 'web') || contains(inputs.build_for, 'wasm')) ) || ( !inputs.tag && (contains(env.build_for, 'web') || contains(env.build_for, 'wasm')) ) }}
-      run_build_linux: ${{ (inputs.tag && contains(inputs.build_for, 'linux')) || (!inputs.tag && contains(env.build_for, 'linux') ) }}
-      run_build_windows: ${{ ( inputs.tag && contains(inputs.build_for, 'windows')) || (!inputs.tag && contains(env.build_for, 'windows') ) }}
-      run_build_macos_intel: ${{ ( inputs.tag && (contains(inputs.build_for, 'intel') || contains(inputs.build_for, 'macos')) ) || (!inputs.tag && (contains(env.build_for, 'intel') || contains(env.build_for, 'macos')) ) }}
-      run_build_macos_apple_silicon: ${{ ( inputs.tag && ( contains(inputs.build_for, 'apple') || contains(inputs.build_for, 'macos') )) || (!inputs.tag && (contains(env.build_for, 'apple') || contains(env.build_for, 'macos')) ) }}
-      run_publish_github_releases: ${{ ( inputs.tag && contains(inputs.publish_to, 'releases')) || (!inputs.tag && contains(env.publish_to, 'releases') ) }}
+      run_build_web: ${{ ( inputs.tag &&  (contains(inputs.build_for, 'web') || contains(inputs.build_for, 'wasm')) ) || ( !inputs.tag && (contains(env.build_for, 'web') || contains(env.build_for, 'wasm') ) ) }}
+      run_build_linux: ${{ (inputs.tag && contains(inputs.build_for, 'linux') ) || ( !inputs.tag && contains(env.build_for, 'linux') ) }}
+      run_build_windows: ${{ ( inputs.tag && contains(inputs.build_for, 'windows') ) || ( !inputs.tag && contains(env.build_for, 'windows') ) }}
+      run_build_macos: ${{ ( inputs.tag && contains(inputs.build_for, 'macos') ) || ( !inputs.tag && contains(env.build_for, 'macos') ) }}
+      run_build_macos_intel: ${{ ( inputs.tag && contains(inputs.build_for, 'intel') ) || ( !inputs.tag && contains(env.build_for, 'intel') ) }}
+      run_build_macos_apple_silicon: ${{ ( inputs.tag && contains(inputs.build_for, 'apple') ) || ( !inputs.tag && contains(env.build_for, 'apple')) }}
+      run_publish_github_releases: ${{ ( inputs.tag && contains(inputs.publish_to, 'releases') ) || ( !inputs.tag && contains(env.publish_to, 'releases') ) }}
       run_publish_itchio: ${{ ( inputs.tag && contains(inputs.publish_to, 'itchio')) || (!inputs.tag && contains(env.publish_to, 'itchio') ) }}
       run_publish_github_pages: ${{ ( inputs.tag && contains(inputs.publish_to, 'pages')) || (!inputs.tag && contains(env.publish_to, 'pages') ) }}
       itchio_target: ${{ inputs.itchio_target || env.itchio_target }}
@@ -219,6 +220,51 @@ jobs:
           name: ${{ env.platform }}
           path: |
             ${{ steps.set_file_name.outputs.file_name  }}.zip
+            file_name.txt
+          retention-days: 1
+
+  # Build for MacOS Universal
+  build-macos:
+    runs-on: macos-latest
+    needs: load-env
+    if: needs.load-env.outputs.run_build_macos == 'true'
+    env:
+      platform: macos_intel
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-apple-darwin
+
+      - name: Environment Setup
+        run: |
+          export CFLAGS="-fno-stack-check"
+          export MACOSX_DEPLOYMENT_TARGET="10.9"
+
+      - name: Build
+        run: |
+          cargo build --release --target x86_64-apple-darwin
+
+      - name: Set file name
+        id: set_file_name
+        run: |
+          echo "file_name=${{ env.binary }}_${{ needs.load-env.outputs.tag }}_${{ env.platform }}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare Package
+        run: |
+          mkdir -p ${{ env.binary }}.app/Contents/MacOS
+          cp target/x86_64-apple-darwin/release/${{ env.binary }} ${{ env.binary }}.app/Contents/MacOS/
+          cp -r assets ${{ env.binary }}.app/Contents/MacOS/
+          hdiutil create -fs HFS+ -volname "${{ env.binary }}" -srcfolder ${{ env.binary }}.app ${{ steps.set_file_name.outputs.file_name  }}.dmg
+          echo ${{ steps.set_file_name.outputs.file_name }} >> file_name.txt      
+
+      - name: Upload binaries to artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.platform }}
+          path: |
+            ${{ steps.set_file_name.outputs.file_name  }}.dmg
             file_name.txt
           retention-days: 1
 
@@ -408,13 +454,18 @@ jobs:
           for channel in $(ls builds); do
             echo $channel
             if [ "$channel" = "github-pages" ]; then
-                continue
+              continue
             fi
-            ./butler push \
+           for file in builds/$channel/*; do
+              i f [ "${file##*.}" = "txt" ]; then
+                continue  # Skip .txt files
+              fi
+              ./butler push \
                 --fix-permissions \
                 --userversion="${{ needs.load-env.outputs.tag }}" \
-                builds/$channel/* \
+                "$file" \
                 ${{ needs.load-env.outputs.itchio_target }}:$channel
+            done
           done
 
   # Publish to github page
