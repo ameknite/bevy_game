@@ -10,9 +10,9 @@ on:
         required: true
         type: string
 
-
 jobs:
   publish-itchio:
+    name: itchio
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
