@@ -10,8 +10,10 @@ on:
         required: true
         type: string
       run_macos_intel:
+        required: true
         type: string
       run_macos_apple_silicon:
+        required: true
         type: string
 
 
@@ -60,6 +62,7 @@ jobs:
         
   build-macos-apple-silicon:
     name: macos_apple_silicon
+    if: inputs.run_macos_apple_silicon == 'true'
     env:
       platform: macos_apple_silicon
     runs-on: macos-latest
