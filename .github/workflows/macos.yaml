@@ -81,7 +81,7 @@ jobs:
 
       - name: Build
         run: |
-          SDKROOT=$(xcrun -sdk macosx --show-sdk-path) cargo build --release --target aarch64-apple-darwin
+          cargo build --release --target aarch64-apple-darwin
 
       - name: Set Paths
         id: set_paths
@@ -92,7 +92,7 @@ jobs:
       - name: Prepare Package
         run: |
           mkdir -p ${{ steps.set_paths.outputs.app_structure }}
-          cp target/x86_64-apple-darwin/release/${{ inputs.binary }} ${{ steps.set_paths.outputs.app_structure }}
+          cp target/aarch64-apple-darwin/release/${{ inputs.binary }} ${{ steps.set_paths.outputs.app_structure }}
           cp -r assets ${{ steps.set_paths.outputs.app_structure }}
           hdiutil create -fs HFS+ -volname "${{ inputs.binary }}" -srcfolder ${{ inputs.binary }}.app ${{ steps.set_paths.outputs.file_name  }}.dmg
 
