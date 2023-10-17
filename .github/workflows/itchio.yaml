@@ -1,3 +1,5 @@
+name: Publish Itch.io
+
 on:
   workflow_call:
     inputs:
