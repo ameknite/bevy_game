@@ -31,7 +31,8 @@ Definition: [.github/workflows/release.yaml](./.github/workflows/release.yaml)
 
 This workflow runs every time you push a tag to your repo.
 
-![Release workflow](https://github-production-user-asset-6210df.s3.amazonaws.com/104745335/275748837-dabc7f96-c483-45da-89c3-df2c60ddbba4.png)
+![Release workflow](https://github-production-user-asset-6210df.s3.amazonaws.com/104745335/275749640-8f70a5bd-661b-4477-ae38-d8e4aafbbb5f.png)
+
 
 Example using git:
 
