@@ -81,7 +81,7 @@ jobs:
 
       - name: Build
         run: |
-          cargo build --release --target aarch64-apple-darwin
+          SDKROOT=$(xcrun -sdk macosx --show-sdk-path) cargo build --release --target aarch64-apple-darwin
 
       - name: Set Paths
         id: set_paths
