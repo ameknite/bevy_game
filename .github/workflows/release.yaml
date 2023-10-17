@@ -56,6 +56,7 @@ on:
         type: string
 
 jobs:
+  # Load variables
   load-env:
     runs-on: ubuntu-latest
     steps:
@@ -76,7 +77,7 @@ jobs:
       tag: ${{ ( inputs.tag || steps.get_version.outputs.tag ) }}
       binary: ${{ env.binary }}
 
-  # Build for Web Wasm
+  # Build for Web/WASM
   build-web:
     needs: load-env
     if: needs.load-env.outputs.run_build_web == 'true'
@@ -108,7 +109,7 @@ jobs:
       binary: ${{ needs.load-env.outputs.binary }}
 
 
-  # Build for MacOS x86_64ARM64
+  # Build for MacOS x86_64/ARM64
   build-macos:
     needs: load-env
     if: needs.load-env.outputs.run_build_macos == 'true'
@@ -121,7 +122,7 @@ jobs:
       run_macos_apple_silicon: ${{ needs.load-env.outputs.run_build_macos_apple_silicon }}
 
 
-  # Release binaries in github
+  # Release binaries in GitHub
   publish-github-releases:
     needs:
       - load-env
@@ -145,14 +146,14 @@ jobs:
           - artifact_name: macos_intel
             os: macos-latest
     uses: ./.github/workflows/github_releases.yaml
-    name: publish
+    name: publish github-releases
     with:
       tag: ${{ needs.load-env.outputs.tag }}
       os: ${{ matrix.os }}
       artifact_name: ${{ matrix.artifact_name }}
     secrets: inherit
 
-  # Publish to itch.io
+  # Publish to Itch.io
   publish-itchio:
     needs:
       - load-env
@@ -168,7 +169,7 @@ jobs:
       itchio_target: ${{ needs.load-env.outputs.itchio_target }}
     secrets: inherit
 
-  # Publish to github page
+  # Publish to GitHub Pages
   publish-github-pages:
     needs:
       - load-env
