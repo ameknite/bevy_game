@@ -76,6 +76,7 @@ jobs:
       - name: Environment
         # macos 11 was the first version to support ARM
         run: |
+          export CFLAGS="-fno-stack-check"
           export MACOSX_DEPLOYMENT_TARGET="11"
 
       - name: Build
