@@ -73,17 +73,17 @@ jobs:
         with:
           targets: aarch64-apple-darwin
 
-      - name: Environment
-        # macos 11 was the first version to support ARM
-        run: |
-          export CFLAGS="-fno-stack-check"
-          export MACOSX_DEPLOYMENT_TARGET="11"
+      # - name: Environment Setup
+      #   # macos 11 was the first version to support ARM
+      #   run: |
+      #     export CFLAGS="-fno-stack-check"
+      #     export MACOSX_DEPLOYMENT_TARGET="11.0"
 
       - name: Build
         run: |
           cargo build --release --target aarch64-apple-darwin
 
-      - name: Set paths
+      - name: Set Paths
         id: set_paths
         run: |
           echo "file_name=${{ inputs.binary }}_${{ inputs.tag }}_${{ env.platform }}" >> "$GITHUB_OUTPUT"
@@ -92,9 +92,10 @@ jobs:
       - name: Prepare Package
         run: |
           mkdir -p ${{ steps.set_paths.outputs.app_structure }}
-          cp target/aarch64-apple-darwin/release/${{ inputs.binary }} ${{ steps.set_paths.outputs.app_structure }}
+          cp target/x86_64-apple-darwin/release/${{ inputs.binary }} ${{ steps.set_paths.outputs.app_structure }}
           cp -r assets ${{ steps.set_paths.outputs.app_structure }}
           hdiutil create -fs HFS+ -volname "${{ inputs.binary }}" -srcfolder ${{ inputs.binary }}.app ${{ steps.set_paths.outputs.file_name  }}.dmg
+
 
       - name: Upload binaries to artifacts
         uses: actions/upload-artifact@v3
