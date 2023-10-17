@@ -68,7 +68,7 @@ For example, `build_for: web, linux, macos` will build for the Web, Linux and Ma
 
 The build files will be uploaded to the artifacts section of their respective workflow runs. To access them, go to your GitHub repository, navigate to the `Actions` section, click on `Release` in the sidebar, select the `workflow run` triggered by your tag, and scroll down to find your artifacts.
 
-![Artifacts](https://github-production-user-asset-6210df.s3.amazonaws.com/104745335/268779709-2e1b3f0b-446b-40f1-8430-39583cb37cdd.png)
+![Artifacts](https://github-production-user-asset-6210df.s3.amazonaws.com/104745335/275743001-ce09f21c-3f3b-476d-a0a1-3f56ba2a46a9.png)
 
 ### Publish
 
