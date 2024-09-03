@@ -365,7 +365,7 @@ jobs:
 
       - name: Download artifacts
         if: steps.check_artifact.outputs.exists == 'true'
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: ${{matrix.artifact_name}}
 
@@ -393,7 +393,7 @@ jobs:
     if: ${{ always() && !failure() && !cancelled() && needs.load-env.outputs.run_publish_itchio == 'true' && needs.load-env.outputs.itchio_target != ''}}
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           path: ./builds
 
@@ -431,7 +431,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Download artifacts
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4.1.7
         with:
           name: wasm_${{ needs.load-env.outputs.web_graphic_api }}
 
